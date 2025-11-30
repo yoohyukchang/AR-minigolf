@@ -1,0 +1,33 @@
+using UnityEngine;
+
+public class StartGameManager : MonoBehaviour
+{
+    [Header("UI")]
+    public GameObject startUIRoot;
+
+    [Header("Gameplay")]
+    public BallController ballController;
+    
+    private bool hasStarted = false;
+
+    // Called by the Start button
+    public void OnStartButtonPressed()
+    {
+        if (hasStarted) return;
+        hasStarted = true;
+
+        // Hide the start menu UI
+        if (startUIRoot != null)
+        {
+            startUIRoot.SetActive(false);
+        }
+
+        // Tell ballController to spawn & drop the ball when MRUK is ready
+        if (ballController != null)
+        {
+            ballController.BeginGame();
+        }
+
+        Debug.Log("[StartGameManager] Game started!");
+    }
+}
