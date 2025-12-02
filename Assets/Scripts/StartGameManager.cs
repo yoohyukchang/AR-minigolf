@@ -22,6 +22,12 @@ public class StartGameManager : MonoBehaviour
             startUIRoot.SetActive(false);
         }
 
+        // Notify GameStateManager
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.StartGame();
+        }
+
         // Tell ballController to spawn & drop the ball when MRUK is ready
         if (ballController != null)
         {

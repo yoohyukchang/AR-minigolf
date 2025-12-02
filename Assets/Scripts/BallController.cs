@@ -90,6 +90,12 @@ public class BallController : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
         }
 
+        // Notify GameStateManager that ball has been spawned
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.NotifyBallSpawned(ballPos, Quaternion.identity);
+        }
+
         Debug.Log("MRUK: Ball placed above floor.");
     }
 }

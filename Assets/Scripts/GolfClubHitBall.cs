@@ -76,5 +76,17 @@ public class GolfClubHitBall : MonoBehaviour
 
         // --- 4. Apply the impulse ---
         ballRb.AddForce(launchDir * impulseMagnitude, ForceMode.Impulse);
+
+        // --- 5. Notify GameStateManager ---
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.NotifyBallHit(
+                other.transform.position,
+                ballRb.linearVelocity,
+                other.transform.rotation,
+                clubVel,
+                speed
+            );
+        }
     }
 }
