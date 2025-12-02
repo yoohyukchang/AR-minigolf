@@ -14,16 +14,16 @@ public class GolfClubHitBall : MonoBehaviour
 
     [Header("Hit Tuning (all very small)")]
     [Tooltip("Even the slowest tap is treated as at least this speed.")]
-    public float minEffectiveSpeed = 0.1f;     // was 0.1
+    public float minEffectiveSpeed = 0.1f;
 
     [Tooltip("Base impulse applied even for slow taps.")]
-    public float baseImpulse = 0.05f;          // was 0.05
+    public float baseImpulse = 0.1f;
 
     [Tooltip("Extra impulse per m/s of swing speed.")]
-    public float swingSpeedMultiplier = 0.03f;  // was 0.05
+    public float swingSpeedMultiplier = 0.1f;
 
     [Tooltip("Clamp so shots never get too strong.")]
-    public float maxImpulse = 0.8f;             // was 0.8
+    public float maxImpulse = 0.8f;
 
     private void Reset()
     {
