@@ -59,6 +59,9 @@ public class ObserverCameraController : MonoBehaviour
 
         // Try to find ball immediately if it already exists
         TryFindBall();
+
+        // Try to find NetworkedPlayerState if not assigned
+        TryFindPlayerState();
     }
 
     private void OnDestroy()
@@ -89,6 +92,22 @@ public class ObserverCameraController : MonoBehaviour
         }
     }
 
+    private void TryFindPlayerState()
+    {
+        if (playerState == null)
+        {
+            playerState = FindFirstObjectByType<NetworkedPlayerState>();
+            if (playerState != null)
+            {
+                Debug.Log($"[ObserverCamera] NetworkedPlayerState reference found");
+            }
+            else
+            {
+                Debug.LogWarning($"[ObserverCamera] NetworkedPlayerState not found in scene");
+            }
+        }
+    }
+
     private void LateUpdate()
     {
         if (observerCamera == null) return;
@@ -97,6 +116,12 @@ public class ObserverCameraController : MonoBehaviour
         if (ballTransform == null)
         {
             TryFindBall();
+        }
+
+        // Periodically try to find player state if not yet found
+        if (playerState == null)
+        {
+            TryFindPlayerState();
         }
 
         switch (currentMode)
