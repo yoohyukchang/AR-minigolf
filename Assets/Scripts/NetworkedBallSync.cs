@@ -22,12 +22,29 @@ public class NetworkedBallSync : MonoBehaviourPun, IPunObservable
     {
         _rigidbody = GetComponent<Rigidbody>();
 
-        // Subscribe to GameStateManager events
-        if (GameStateManager.Instance != null)
+        // Subscribe to GameStateManager events (only on main player)
+        if (GameStateManager.Instance != null && PhotonNetwork.IsMasterClient)
         {
             GameStateManager.Instance.OnBallSpawned += OnBallSpawned;
             GameStateManager.Instance.OnBallHit += OnBallHit;
         }
+
+        // Configure rigidbody based on ownership
+        if (photonView != null && !photonView.IsMine)
+        {
+            // Observers: Keep rigidbody for physics but make it kinematic to prevent local simulation
+            _rigidbody.isKinematic = false; // We want realistic motion
+            _rigidbody.useGravity = true;
+            Debug.Log("[NetworkedBallSync] Observer mode - receiving ball updates");
+        }
+        else
+        {
+            Debug.Log("[NetworkedBallSync] Main player mode - controlling ball physics");
+        }
+
+        // Initialize network position/rotation to current values
+        _networkPosition = transform.position;
+        _networkRotation = transform.rotation;
     }
 
     private void OnDestroy()
@@ -110,10 +127,15 @@ public class NetworkedBallSync : MonoBehaviourPun, IPunObservable
     {
         transform.position = position;
         transform.rotation = rotation;
-        _rigidbody.linearVelocity = Vector3.zero;
-        _rigidbody.angularVelocity = Vector3.zero;
+
+        if (_rigidbody != null)
+        {
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
+        }
+
         gameObject.SetActive(true);
-        Debug.Log("[NetworkedBallSync] Ball spawned via RPC");
+        Debug.Log($"[NetworkedBallSync] Ball spawned via RPC at {position}");
     }
 
     [PunRPC]
@@ -123,5 +145,20 @@ public class NetworkedBallSync : MonoBehaviourPun, IPunObservable
         _networkRotation = rotation;
         _networkVelocity = velocity;
         Debug.Log($"[NetworkedBallSync] Ball hit via RPC, velocity: {velocity.magnitude:F2}");
+    }
+
+    /// <summary>
+    /// Called when a new player joins the room (late joiner support)
+    /// </summary>
+    public void OnPhotonInstantiate(PhotonMessageInfo info)
+    {
+        Debug.Log($"[NetworkedBallSync] Ball instantiated for {(photonView.IsMine ? "main player" : "observer")}");
+
+        // Observers should immediately sync to the current state
+        if (!photonView.IsMine)
+        {
+            // Position will be updated via OnPhotonSerializeView
+            Debug.Log("[NetworkedBallSync] Late-joining observer - will sync ball state");
+        }
     }
 }

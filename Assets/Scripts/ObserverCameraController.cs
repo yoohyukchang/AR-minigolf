@@ -56,6 +56,9 @@ public class ObserverCameraController : MonoBehaviour
         {
             GameStateManager.Instance.OnBallSpawned += OnBallSpawned;
         }
+
+        // Try to find ball immediately if it already exists
+        TryFindBall();
     }
 
     private void OnDestroy()
@@ -68,13 +71,20 @@ public class ObserverCameraController : MonoBehaviour
 
     private void OnBallSpawned(Vector3 position, Quaternion rotation)
     {
-        // Find ball reference if not set
+        // Find ball reference when it spawns
+        TryFindBall();
+        Debug.Log($"[ObserverCamera] Ball spawned event received, ball found: {ballTransform != null}");
+    }
+
+    private void TryFindBall()
+    {
         if (ballTransform == null)
         {
             GameObject ball = GameObject.FindGameObjectWithTag("GolfBall");
             if (ball != null)
             {
                 ballTransform = ball.transform;
+                Debug.Log($"[ObserverCamera] Ball reference found: {ball.name}");
             }
         }
     }
@@ -82,6 +92,12 @@ public class ObserverCameraController : MonoBehaviour
     private void LateUpdate()
     {
         if (observerCamera == null) return;
+
+        // Periodically try to find ball if not yet found (for late-joining observers)
+        if (ballTransform == null)
+        {
+            TryFindBall();
+        }
 
         switch (currentMode)
         {

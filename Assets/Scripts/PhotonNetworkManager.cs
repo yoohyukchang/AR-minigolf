@@ -141,9 +141,9 @@ public class PhotonNetworkManager : MonoBehaviourPunCallbacks
 
     private void SpawnNetworkedObjects()
     {
-        // This will be called by the main player to instantiate networked objects
-        Debug.Log("[PhotonNetworkManager] Spawning networked objects...");
-        // TODO: Add implementation after Photon installation
+        // Note: Ball spawning is handled by BallController after MRUK initializes
+        // This method is reserved for other networked objects if needed in the future
+        Debug.Log("[PhotonNetworkManager] Ready for networked object spawning (handled by game scripts)");
     }
 
     // Helper to check if we're the main player

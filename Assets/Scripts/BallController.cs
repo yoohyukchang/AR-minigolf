@@ -1,13 +1,18 @@
 using System.Linq;
 using UnityEngine;
 using Meta.XR.MRUtilityKit;
+using Photon.Pun;
 
 public class BallController : MonoBehaviour
 {
     public MRUK mruk;
     public Transform playerHead;
-    public Transform ballTransform;
 
+    [Header("Network Settings")]
+    [Tooltip("Name of the ball prefab in Resources folder")]
+    public string ballPrefabName = "NetworkedBall";
+
+    private Transform _ballTransform;
     private bool _placed;
     private bool _startRequested;
 
@@ -17,12 +22,6 @@ public class BallController : MonoBehaviour
         {
             mruk = FindObjectOfType<MRUK>();
         }
-
-        // Make sure the ball is hidden until the game actually starts
-        if (ballTransform != null)
-        {
-            ballTransform.gameObject.SetActive(false);
-        }
     }
 
     // Called by the Start button (via StartGameManager)
@@ -31,15 +30,22 @@ public class BallController : MonoBehaviour
         _startRequested = true;
         _placed = false;
 
-        if (ballTransform != null)
+        // Only the main player spawns the ball
+        if (PhotonNetwork.IsMasterClient)
         {
-            // Show the ball so physics can act on it
-            ballTransform.gameObject.SetActive(true);
+            Debug.Log("[BallController] Main player - will spawn ball when MRUK is ready");
+        }
+        else
+        {
+            Debug.Log("[BallController] Observer - waiting for ball to be spawned by main player");
         }
     }
 
     void Update()
     {
+        // Only the main player handles ball spawning
+        if (!PhotonNetwork.IsMasterClient) return;
+
         // Do nothing until:
         //  - Start has been requested
         //  - MRUK is initialized
@@ -47,23 +53,23 @@ public class BallController : MonoBehaviour
         if (!_startRequested || _placed || mruk == null) return;
         if (!mruk.IsInitialized) return;
 
-        PlaceBall();
+        SpawnAndPlaceBall();
         _placed = true;
     }
 
-    void PlaceBall()
+    void SpawnAndPlaceBall()
     {
         var room = mruk.Rooms.FirstOrDefault();
         if (room == null)
         {
-            Debug.LogWarning("MRUK: No room found.");
+            Debug.LogWarning("[BallController] MRUK: No room found.");
             return;
         }
 
         var floor = room.GetFloorAnchor();
         if (floor == null)
         {
-            Debug.LogWarning("MRUK: No floor anchor found.");
+            Debug.LogWarning("[BallController] MRUK: No floor anchor found.");
             return;
         }
 
@@ -76,26 +82,51 @@ public class BallController : MonoBehaviour
             forwardFlat = Vector3.forward;
         }
 
-        // Put cuballbe 0.5m in front of user and 1m above the floor
+        // Calculate spawn position: 0.5m in front of user and 1m above the floor
         Vector3 userOnFloor = new Vector3(headPos.x, floorY, headPos.z);
         Vector3 ballPos = userOnFloor + forwardFlat * 0.5f + Vector3.up * 1.0f;
 
-        ballTransform.position = ballPos;
-        ballTransform.rotation = Quaternion.identity;
-
-        var rb = ballTransform.GetComponent<Rigidbody>();
-        if (rb != null)
+        // Spawn ball over network - Photon will instantiate it for all clients
+        GameObject ballObj = PhotonNetwork.Instantiate(ballPrefabName, ballPos, Quaternion.identity);
+        if (ballObj != null)
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
+            _ballTransform = ballObj.transform;
 
-        // Notify GameStateManager that ball has been spawned
-        if (GameStateManager.Instance != null)
+            var rb = ballObj.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
+            Debug.Log($"[BallController] Ball spawned over network at {ballPos}");
+
+            // Notify GameStateManager that ball has been spawned
+            if (GameStateManager.Instance != null)
+            {
+                GameStateManager.Instance.NotifyBallSpawned(ballPos, Quaternion.identity);
+            }
+        }
+        else
         {
-            GameStateManager.Instance.NotifyBallSpawned(ballPos, Quaternion.identity);
+            Debug.LogError($"[BallController] Failed to spawn ball prefab '{ballPrefabName}'. Make sure it exists in Resources folder.");
         }
+    }
 
-        Debug.Log("MRUK: Ball placed above floor.");
+    /// <summary>
+    /// Get the current ball transform (useful for other scripts)
+    /// </summary>
+    public Transform GetBallTransform()
+    {
+        if (_ballTransform == null)
+        {
+            // Try to find it if not yet assigned
+            GameObject ball = GameObject.FindGameObjectWithTag("GolfBall");
+            if (ball != null)
+            {
+                _ballTransform = ball.transform;
+            }
+        }
+        return _ballTransform;
     }
 }
