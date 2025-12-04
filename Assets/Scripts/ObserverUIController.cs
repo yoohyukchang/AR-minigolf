@@ -16,6 +16,8 @@ public class ObserverUIController : MonoBehaviour
     public TextMeshProUGUI cameraModeLabelText;
     public TextMeshProUGUI roomCodeText;
     public GameObject connectionPanel;
+    public GameObject statsPanel;
+    public GameObject cameraControlsPanel;
     public TMP_InputField roomCodeInput;
     public Button connectButton;
 
@@ -45,10 +47,20 @@ public class ObserverUIController : MonoBehaviour
         // Setup button listeners
         SetupButtons();
 
-        // Show connection panel initially
+        // Show connection panel initially, hide stats and controls
         if (connectionPanel != null)
         {
             connectionPanel.SetActive(true);
+        }
+
+        if (statsPanel != null)
+        {
+            statsPanel.SetActive(false);
+        }
+
+        if (cameraControlsPanel != null)
+        {
+            cameraControlsPanel.SetActive(false);
         }
     }
 
@@ -169,9 +181,20 @@ public class ObserverUIController : MonoBehaviour
     {
         _isConnected = true;
 
+        // Hide connection panel, show stats and camera controls
         if (connectionPanel != null)
         {
             connectionPanel.SetActive(false);
+        }
+
+        if (statsPanel != null)
+        {
+            statsPanel.SetActive(true);
+        }
+
+        if (cameraControlsPanel != null)
+        {
+            cameraControlsPanel.SetActive(true);
         }
 
         if (roomCodeText != null)
@@ -183,5 +206,7 @@ public class ObserverUIController : MonoBehaviour
         {
             cameraModeLabelText.text = "View: POV Mirror";
         }
+
+        Debug.Log("[ObserverUI] Connected to room, UI panels updated");
     }
 }
