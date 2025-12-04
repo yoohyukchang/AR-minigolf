@@ -59,20 +59,28 @@ public class NetworkedBallSync : MonoBehaviourPun, IPunObservable
     // Called when ball is spawned
     private void OnBallSpawned(Vector3 position, Quaternion rotation)
     {
-        if (PhotonNetwork.IsMasterClient)
+        if (PhotonNetwork.IsMasterClient && photonView != null && photonView.ViewID != 0)
         {
             // Send RPC to all observers
             photonView.RPC("RPC_BallSpawned", RpcTarget.Others, position, rotation);
+        }
+        else if (photonView == null || photonView.ViewID == 0)
+        {
+            Debug.LogWarning("[NetworkedBallSync] Cannot send RPC_BallSpawned - PhotonView not initialized");
         }
     }
 
     // Called when ball is hit
     private void OnBallHit(Vector3 position, Vector3 velocity, Quaternion rotation)
     {
-        if (PhotonNetwork.IsMasterClient)
+        if (PhotonNetwork.IsMasterClient && photonView != null && photonView.ViewID != 0)
         {
             // Send RPC to all observers
             photonView.RPC("RPC_BallHit", RpcTarget.Others, position, velocity, rotation);
+        }
+        else if (photonView == null || photonView.ViewID == 0)
+        {
+            Debug.LogWarning("[NetworkedBallSync] Cannot send RPC_BallHit - PhotonView not initialized");
         }
     }
 

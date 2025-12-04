@@ -104,6 +104,19 @@ public class PhotonNetworkManager : MonoBehaviourPunCallbacks
             // Spawn networked game objects
             SpawnNetworkedObjects();
         }
+        else
+        {
+            // Notify observer UI that connection was successful
+            ObserverUIController observerUI = FindFirstObjectByType<ObserverUIController>();
+            if (observerUI != null)
+            {
+                observerUI.OnConnectedToRoom(CurrentRoomCode);
+            }
+            else
+            {
+                Debug.LogWarning("[PhotonNetworkManager] ObserverUIController not found in scene");
+            }
+        }
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)

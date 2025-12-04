@@ -100,23 +100,17 @@ public class ObserverUIController : MonoBehaviour
         }
 
         string roomCode = roomCodeInput.text.ToUpper();
-        Debug.Log($"[ObserverUI] Connecting to room: {roomCode}");
+        Debug.Log($"[ObserverUI] Attempting to connect to room: {roomCode}");
 
         // Connect via PhotonNetworkManager
         if (PhotonNetworkManager.Instance != null)
         {
             PhotonNetworkManager.Instance.JoinRoomAsObserver(roomCode);
+            // Don't set _isConnected here - wait for OnConnectedToRoom callback
         }
-
-        _isConnected = true;
-        if (connectionPanel != null)
+        else
         {
-            connectionPanel.SetActive(false);
-        }
-
-        if (roomCodeText != null)
-        {
-            roomCodeText.text = $"Room: {roomCode}";
+            Debug.LogError("[ObserverUI] PhotonNetworkManager instance not found!");
         }
     }
 
