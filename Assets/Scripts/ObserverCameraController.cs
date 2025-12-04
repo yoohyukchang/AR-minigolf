@@ -106,10 +106,10 @@ public class ObserverCameraController : MonoBehaviour
             ref _smoothVelocity,
             0.1f
         );
-        observerCamera.transform.rotation = Quaternion.Lerp(
+        observerCamera.transform.rotation = Quaternion.RotateTowards(
             observerCamera.transform.rotation,
             _targetRotation,
-            Time.deltaTime * povLerpSpeed
+            povLerpSpeed * Time.deltaTime
         );
     }
 

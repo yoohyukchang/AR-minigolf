@@ -5,7 +5,7 @@ using Photon.Pun;
 /// Synchronizes the main player's camera/head position and rotation to observers.
 /// Allows observers to see the player's POV.
 /// </summary>
-public class NetworkedPlayerState : MonoBehaviour, MonoBehaviourPun, IPunObservable
+public class NetworkedPlayerState : MonoBehaviourPun, IPunObservable
 {
     [Header("References")]
     public Transform mainCameraTransform; // Assign CenterEyeAnchor in inspector

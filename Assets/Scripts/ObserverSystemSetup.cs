@@ -154,7 +154,7 @@ public class ObserverSystemSetupEditor : UnityEditor.Editor
             "Next Steps:\n" +
             "1. Install Photon PUN 2 from Asset Store\n" +
             "2. Add PhotonView components to ball and player\n" +
-            "3. Test in play mode\n\n" +
+            "3. Test in play mode",
             UnityEditor.MessageType.Warning
         );
     }

@@ -97,3 +97,23 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+*.fbx
+/Assets/Photon.meta
+/Assets/Photon
+
+# Visual Studio
+.vsconfig
+UpgradeLog.htm
+
+# Unity generated - already should be there but verify
+Library/
+Temp/
+Logs/
+UserSettings/
+MemoryCaptures/
+obj/
+Builds/
+
+# Oculus/Meta - if not customized
+Assets/Oculus/
+Assets/Oculus.meta

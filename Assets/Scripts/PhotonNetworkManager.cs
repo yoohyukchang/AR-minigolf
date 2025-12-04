@@ -6,7 +6,7 @@ using Photon.Realtime;
 /// Manages Photon networking, room creation, and observer connections.
 /// Uses a 6-digit room code system for observers to join.
 /// </summary>
-public class PhotonNetworkManager : MonoBehaviour, MonoBehaviourPunCallbacks
+public class PhotonNetworkManager : MonoBehaviourPunCallbacks
 {
     public static PhotonNetworkManager Instance { get; private set; }
 

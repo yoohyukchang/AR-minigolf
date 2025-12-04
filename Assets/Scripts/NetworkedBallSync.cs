@@ -6,7 +6,7 @@ using Photon.Pun;
 /// Main player owns the physics simulation, observers receive updates.
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
-public class NetworkedBallSync : MonoBehaviour, MonoBehaviourPun, IPunObservable
+public class NetworkedBallSync : MonoBehaviourPun, IPunObservable
 {
     private Rigidbody _rigidbody;
     private Vector3 _networkPosition;
