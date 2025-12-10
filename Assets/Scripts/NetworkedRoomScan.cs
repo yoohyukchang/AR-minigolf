@@ -35,6 +35,9 @@ public class NetworkedRoomScan : MonoBehaviourPunCallbacks
     private bool _roomDataSent = false;
     private Dictionary<string, GameObject> _visualizedObjects = new Dictionary<string, GameObject>();
 
+    // Cache room data for late joiners
+    private MRUKRoom _cachedRoom;
+
     private void Start()
     {
         if (mruk == null)
@@ -54,6 +57,19 @@ public class NetworkedRoomScan : MonoBehaviourPunCallbacks
         if (MRUK.Instance != null)
         {
             MRUK.Instance.DeregisterSceneLoadedCallback(OnRoomLoaded);
+        }
+    }
+
+    // Called when a new player (observer) joins the room
+    public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
+    {
+        base.OnPlayerEnteredRoom(newPlayer);
+
+        // Only the main player sends room data
+        if (PhotonNetwork.IsMasterClient && _cachedRoom != null)
+        {
+            Debug.Log($"[NetworkedRoomScan] New observer joined, sending room data to player {newPlayer.ActorNumber}");
+            SendRoomDataToSpecificPlayer(newPlayer);
         }
     }
 
@@ -92,7 +108,13 @@ public class NetworkedRoomScan : MonoBehaviourPunCallbacks
             return;
         }
 
-        Debug.Log("[NetworkedRoomScan] Sending room data to observers...");
+        // Cache the room for late joiners
+        _cachedRoom = room;
+
+        Debug.Log("[NetworkedRoomScan] Sending room data to all observers...");
+
+        // First, tell all observers to clear their old visualizations
+        photonView.RPC("RPC_ClearVisualizations", RpcTarget.Others);
 
         // Send floor data
         var floor = room.GetFloorAnchor();
@@ -121,7 +143,48 @@ public class NetworkedRoomScan : MonoBehaviourPunCallbacks
         Debug.Log($"[NetworkedRoomScan] Sent room data: Floor={floor != null}, Walls={walls?.Count ?? 0}, Ceiling={ceiling != null}");
     }
 
-    private void SendAnchorData(string anchorId, MRUKAnchor anchor)
+    // Send room data to a specific player (for late joiners)
+    private void SendRoomDataToSpecificPlayer(Photon.Realtime.Player targetPlayer)
+    {
+        if (_cachedRoom == null)
+        {
+            Debug.LogWarning("[NetworkedRoomScan] No cached room data to send");
+            return;
+        }
+
+        Debug.Log($"[NetworkedRoomScan] Sending room data to player {targetPlayer.ActorNumber}...");
+
+        // First, tell the new observer to clear any old visualizations
+        photonView.RPC("RPC_ClearVisualizations", targetPlayer);
+
+        // Send floor data
+        var floor = _cachedRoom.GetFloorAnchor();
+        if (floor != null && showFloor)
+        {
+            SendAnchorData("Floor", floor, targetPlayer);
+        }
+
+        // Send wall data
+        var walls = _cachedRoom.WallAnchors;
+        if (walls != null && showWalls)
+        {
+            for (int i = 0; i < walls.Count; i++)
+            {
+                SendAnchorData($"Wall_{i}", walls[i], targetPlayer);
+            }
+        }
+
+        // Send ceiling data
+        var ceiling = _cachedRoom.GetCeilingAnchor();
+        if (ceiling != null && showCeiling)
+        {
+            SendAnchorData("Ceiling", ceiling, targetPlayer);
+        }
+
+        Debug.Log($"[NetworkedRoomScan] Sent room data to player {targetPlayer.ActorNumber}: Floor={floor != null}, Walls={walls?.Count ?? 0}, Ceiling={ceiling != null}");
+    }
+
+    private void SendAnchorData(string anchorId, MRUKAnchor anchor, Photon.Realtime.Player targetPlayer = null)
     {
         if (anchor == null) return;
 
@@ -141,13 +204,27 @@ public class NetworkedRoomScan : MonoBehaviourPunCallbacks
         Quaternion rotation = anchor.transform.rotation;
         Vector3 scale = anchor.transform.localScale;
 
-        // Send via RPC to all observers
-        photonView.RPC("ReceiveAnchorData", RpcTarget.Others,
-            anchorId,
-            SerializeVector3Array(boundaryPoints),
-            position,
-            rotation,
-            scale);
+        // Send via RPC - either to a specific player or to all observers
+        if (targetPlayer != null)
+        {
+            // Send to specific player (for late joiners)
+            photonView.RPC("ReceiveAnchorData", targetPlayer,
+                anchorId,
+                SerializeVector3Array(boundaryPoints),
+                position,
+                rotation,
+                scale);
+        }
+        else
+        {
+            // Send to all observers
+            photonView.RPC("ReceiveAnchorData", RpcTarget.Others,
+                anchorId,
+                SerializeVector3Array(boundaryPoints),
+                position,
+                rotation,
+                scale);
+        }
     }
 
     [PunRPC]
@@ -164,6 +241,13 @@ public class NetworkedRoomScan : MonoBehaviourPunCallbacks
 
         // Create or update visualization
         VisualizeAnchor(anchorId, boundaryPoints, position, rotation, scale);
+    }
+
+    [PunRPC]
+    private void RPC_ClearVisualizations()
+    {
+        Debug.Log("[NetworkedRoomScan] Clearing all visualizations (received RPC)");
+        ClearVisualizations();
     }
 
     private void VisualizeAnchor(string anchorId, Vector3[] boundaryPoints, Vector3 position, Quaternion rotation, Vector3 scale)
