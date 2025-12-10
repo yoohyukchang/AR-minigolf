@@ -7,7 +7,7 @@ public class StartGameManager : MonoBehaviour
 
     [Header("Gameplay")]
     public BallController ballController;
-    
+    public GoalSpawner goalSpawner;
     private bool hasStarted = false;
 
     // Called by the Start button
@@ -27,6 +27,12 @@ public class StartGameManager : MonoBehaviour
         {
             ballController.BeginGame();
         }
+
+        if (goalSpawner != null)
+        {
+            goalSpawner.BeginGame();
+        }
+
 
         Debug.Log("[StartGameManager] Game started!");
     }

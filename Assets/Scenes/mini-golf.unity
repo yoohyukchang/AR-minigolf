@@ -2838,6 +2838,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2046239257}
   - component: {fileID: 2046239256}
+  - component: {fileID: 2046239258}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2859,6 +2860,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StartGameManager
   startUIRoot: {fileID: 1764709139}
   ballController: {fileID: 791402764}
+  goalSpawner: {fileID: 2046239258}
 --- !u!4 &2046239257
 Transform:
   m_ObjectHideFlags: 0
@@ -2874,6 +2876,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2046239258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2046239255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20d971414807146ee88125a7c2c00980, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GoalSpawner
+  mruk: {fileID: 982599373}
+  playerHead: {fileID: 1220487536}
+  goalPrefab: {fileID: 4612527292651802798, guid: e98a23a2599f94d8586a8ef3d9d800c2, type: 3}
+  minDistanceFromPlayer: 2
+  minDistanceToEdge: 0.3
+  maxTries: 20
 --- !u!1 &2068447552
 GameObject:
   m_ObjectHideFlags: 0
