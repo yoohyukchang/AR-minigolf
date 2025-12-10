@@ -21,6 +21,7 @@ public class ObserverCameraController : MonoBehaviour
     public Camera observerCamera;
     public Transform ballTransform;
     public NetworkedPlayerState playerState;
+    public NetworkedRoomScan roomScan;
 
     [Header("Current Mode")]
     public CameraMode currentMode = CameraMode.POVMirror;
@@ -62,6 +63,9 @@ public class ObserverCameraController : MonoBehaviour
 
         // Try to find NetworkedPlayerState if not assigned
         TryFindPlayerState();
+
+        // Try to find NetworkedRoomScan if not assigned
+        TryFindRoomScan();
     }
 
     private void OnDestroy()
@@ -108,6 +112,52 @@ public class ObserverCameraController : MonoBehaviour
         }
     }
 
+    private void TryFindRoomScan()
+    {
+        if (roomScan == null)
+        {
+            roomScan = FindFirstObjectByType<NetworkedRoomScan>();
+            if (roomScan != null)
+            {
+                Debug.Log($"[ObserverCamera] NetworkedRoomScan reference found");
+            }
+            else
+            {
+                Debug.LogWarning($"[ObserverCamera] NetworkedRoomScan not found in scene");
+            }
+        }
+    }
+
+    private Vector3 CalculateRoomCenter()
+    {
+        // Find all visualized room objects
+        GameObject[] roomObjects = GameObject.FindGameObjectsWithTag("Untagged");
+        Vector3 sum = Vector3.zero;
+        int count = 0;
+
+        foreach (GameObject obj in roomObjects)
+        {
+            if (obj.name.StartsWith("Visualized_"))
+            {
+                sum += obj.transform.position;
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            return sum / count;
+        }
+
+        // Fallback: use ball position if room not found
+        if (ballTransform != null)
+        {
+            return ballTransform.position;
+        }
+
+        return Vector3.zero;
+    }
+
     private void LateUpdate()
     {
         if (observerCamera == null) return;
@@ -122,6 +172,12 @@ public class ObserverCameraController : MonoBehaviour
         if (playerState == null)
         {
             TryFindPlayerState();
+        }
+
+        // Periodically try to find room scan if not yet found
+        if (roomScan == null)
+        {
+            TryFindRoomScan();
         }
 
         switch (currentMode)
@@ -165,14 +221,14 @@ public class ObserverCameraController : MonoBehaviour
 
     private void UpdateTopDown()
     {
-        if (ballTransform == null) return;
+        // Calculate the center of the room scan
+        Vector3 roomCenter = CalculateRoomCenter();
 
-        // Position above the ball
-        Vector3 ballPos = ballTransform.position;
-        _targetPosition = ballPos + Vector3.up * topDownHeight;
+        // Position above the room center
+        _targetPosition = roomCenter + Vector3.up * topDownHeight;
 
-        // Look down at the ball with slight angle
-        Vector3 lookPoint = ballPos;
+        // Look down at the room center
+        Vector3 lookPoint = roomCenter;
         Vector3 direction = (lookPoint - _targetPosition).normalized;
         _targetRotation = Quaternion.LookRotation(direction);
     }
