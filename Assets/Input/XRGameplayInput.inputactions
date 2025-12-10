@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "name": "XRGameplayInput",
+    "maps": [
+        {
+            "name": "Gameplay",
+            "id": "e88884bc-6d4e-447a-b5e0-b2a211afdce2",
+            "actions": [
+                {
+                    "name": "NextClub",
+                    "type": "Button",
+                    "id": "04d6a287-2465-49f3-be50-f6c37b189e0e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e6107204-c8da-4a31-8196-43d8effa34d0",
+                    "path": "<XRController>{RightHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "NextClub",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d2c38d87-cf72-4935-9c55-ac2a7aaa0837",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "NextClub",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

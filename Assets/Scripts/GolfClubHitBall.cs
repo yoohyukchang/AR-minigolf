@@ -1,9 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Attach this to the GolfClub child that has the CapsuleCollider (isTrigger = true).
-/// Whenever the club passes through the ball, apply a *very small* impulse
-/// based on swing speed, always at a 45-degree launch angle.
+/// Attach this to the club mesh object (with a trigger collider).
+/// Uses ClubStats so each club (iron, putter, etc.) can have different behavior.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class GolfClubHitBall : MonoBehaviour
@@ -12,18 +11,8 @@ public class GolfClubHitBall : MonoBehaviour
     public GolfClubSwingTracker swingTracker;   // assign GolfClubRoot here
     public string golfBallTag = "GolfBall";
 
-    [Header("Hit Tuning (all very small)")]
-    [Tooltip("Even the slowest tap is treated as at least this speed.")]
-    public float minEffectiveSpeed = 0.1f;
-
-    [Tooltip("Base impulse applied even for slow taps.")]
-    public float baseImpulse = 0.1f;
-
-    [Tooltip("Extra impulse per m/s of swing speed.")]
-    public float swingSpeedMultiplier = 0.1f;
-
-    [Tooltip("Clamp so shots never get too strong.")]
-    public float maxImpulse = 0.8f;
+    [Header("Club Settings")]
+    public ClubStats clubStats;                 // assign IronStats, PutterStats, etc.
 
     private void Reset()
     {
@@ -37,25 +26,27 @@ public class GolfClubHitBall : MonoBehaviour
         if (!other.CompareTag(golfBallTag))
             return;
 
+        if (clubStats == null)
+        {
+            Debug.LogWarning("[GolfClubHitBall] No ClubStats assigned.");
+            return;
+        }
+
         Rigidbody ballRb = other.attachedRigidbody;
         if (ballRb == null)
             return;
 
-        // --- 1. Get swing velocity / speed ---
+        // 1. Get swing velocity / effective speed
         Vector3 clubVel = swingTracker != null ? swingTracker.SwingVelocity : transform.forward;
         float speed = clubVel.magnitude;
+        float effectiveSpeed = Mathf.Max(speed, clubStats.minEffectiveSpeed);
 
-        // Even very slow motion gets at least this speed
-        float effectiveSpeed = Mathf.Max(speed, minEffectiveSpeed);
-
-        // --- 2. Compute launch direction with 45° angle ---
-
-        // Use swing direction projected onto the floor as "forward"
+        // 2. Horizontal direction on the floor
         Vector3 horiz = Vector3.ProjectOnPlane(clubVel, Vector3.up);
 
-        // If swing velocity is tiny or vertical, fall back to club->ball direction
         if (horiz.sqrMagnitude < 1e-4f)
         {
+            // Fallback: club → ball direction (flattened to floor)
             Vector3 clubPos = transform.position;
             Vector3 ballPos = other.transform.position;
             horiz = Vector3.ProjectOnPlane(ballPos - clubPos, Vector3.up);
@@ -68,13 +59,18 @@ public class GolfClubHitBall : MonoBehaviour
         }
 
         Vector3 horizDir = horiz.normalized;
-        Vector3 launchDir = (horizDir + Vector3.up).normalized; // 45° up
 
-        // --- 3. Compute impulse magnitude (very small overall) ---
-        float impulseMagnitude = baseImpulse + effectiveSpeed * swingSpeedMultiplier;
-        impulseMagnitude = Mathf.Min(impulseMagnitude, maxImpulse);
+        // 3. Build launch direction using clubStats.launchAngleDeg
+        float angleRad = clubStats.launchAngleDeg * Mathf.Deg2Rad;
+        Vector3 launchDir =
+            (Mathf.Cos(angleRad) * horizDir + Mathf.Sin(angleRad) * Vector3.up).normalized;
 
-        // --- 4. Apply the impulse ---
+        // 4. Impulse magnitude from clubStats
+        float impulseMagnitude =
+            clubStats.baseImpulse + effectiveSpeed * clubStats.swingSpeedMultiplier;
+        impulseMagnitude = Mathf.Min(impulseMagnitude, clubStats.maxImpulse);
+
+        // 5. Apply impulse
         ballRb.AddForce(launchDir * impulseMagnitude, ForceMode.Impulse);
     }
 }
