@@ -11,13 +11,16 @@ public class GoalSpawner : MonoBehaviour
 
     [Header("Placement Constraints")]
     [Tooltip("Minimum horizontal distance from the player to the goal (meters).")]
-    public float minDistanceFromPlayer = 2.0f;
+    public float minDistanceFromPlayer = 0.1f;
 
     [Tooltip("How far from floor edges/corners to keep the goal (meters).")]
     public float minDistanceToEdge = 0.3f;
 
+    [Tooltip("Maximum horizontal distance from player for goal spawn.")]
+    public float maxDistanceFromPlayer = 1.5f;
+
     [Tooltip("Maximum number of attempts to find a valid spawn point.")]
-    public int maxTries = 20;
+    public int maxTries = 200;
 
     private bool _spawnRequested;
     private bool _spawned;
@@ -48,71 +51,57 @@ public class GoalSpawner : MonoBehaviour
     }
 
     private void TrySpawnGoal()
+{
+    var room = mruk.Rooms.FirstOrDefault();
+    if (room == null)
     {
-        var room = mruk.Rooms.FirstOrDefault();
-        if (room == null)
-        {
-            Debug.LogWarning("[GoalSpawner] No MRUK room found.");
-            return;
-        }
-
-        if (goalPrefab == null)
-        {
-            Debug.LogWarning("[GoalSpawner] No goal prefab assigned.");
-            return;
-        }
-
-        var floorFilter = LabelFilter.Included(MRUKAnchor.SceneLabels.FLOOR);
-
-        Vector2 playerXZ = new Vector2(playerHead.position.x, playerHead.position.z);
-
-        for (int i = 0; i < maxTries; i++)
-        {
-            Vector3 pos;
-            Vector3 normal;
-
-            bool found = room.GenerateRandomPositionOnSurface(
-                MRUK.SurfaceType.FACING_UP,
-                minDistanceToEdge,
-                floorFilter,
-                out pos,
-                out normal
-            );
-
-            if (!found)
-            {
-                // No valid point this iteration, try again.
-                continue;
-            }
-
-            // Make sure we're not too close to the player horizontally
-            Vector2 goalXZ = new Vector2(pos.x, pos.z);
-            float dist = Vector2.Distance(playerXZ, goalXZ);
-            if (dist < minDistanceFromPlayer)
-            {
-                // Too close; try another sample
-                continue;
-            }
-
-            // Optional: avoid placing inside volumes (so you don't spawn inside couches, etc.)
-            if (room.IsPositionInSceneVolume(pos, testVerticalBounds: true, distanceBuffer: 0.05f))
-            {
-                // Position overlaps a scene volume, skip
-                continue;
-            }
-
-            // Align flag 'up' with surface normal
-            Quaternion rotation = Quaternion.FromToRotation(Vector3.forward, normal);
-
-            Vector3 offsetPos = pos + normal * 0.28f;
-
-            _spawnedGoal = Instantiate(goalPrefab, offsetPos, rotation);
-            _spawned = true;
-
-            Debug.Log($"[GoalSpawner] Spawned goal at {pos}, normal {normal}");
-            return;
-        }
-
-        Debug.LogWarning("[GoalSpawner] Could not find a suitable goal position.");
+        Debug.LogWarning("[GoalSpawner] No MRUK room found.");
+        return;
     }
+
+    if (goalPrefab == null)
+    {
+        Debug.LogWarning("[GoalSpawner] No goal prefab assigned.");
+        return;
+    }
+
+    Vector3 headPos = playerHead.position;
+
+    for (int i = 0; i < maxTries; i++)
+    {
+        // Pick a random direction + distance around player
+        float angle = Random.Range(0f, Mathf.PI * 2f);
+        float radius = Random.Range(minDistanceFromPlayer, maxDistanceFromPlayer);
+
+        Vector3 samplePoint = headPos + new Vector3(
+            Mathf.Cos(angle) * radius,
+            0.5f,
+            Mathf.Sin(angle) * radius
+        );
+
+        // Raycast DOWNWARD into the real-world (EffectMesh colliders)
+        if (Physics.Raycast(samplePoint, Vector3.down, out RaycastHit hit, 2f))
+        {
+            // Must be floor-like:
+            if (Vector3.Dot(hit.normal, Vector3.up) < 0.8f)
+                continue;
+
+            // Must not be inside trash volumes
+            if (room.IsPositionInSceneVolume(hit.point, true, 0.05f))
+                continue;
+
+            // Position + rotation
+            Vector3 spawnPos = hit.point + hit.normal * 0.28f;
+            Quaternion rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+
+            Instantiate(goalPrefab, spawnPos, rotation);
+            _spawned = true;
+            Debug.Log("[GoalSpawner] Spawned goal at " + spawnPos);
+            return;
+        }
+    }
+
+    Debug.LogWarning("[GoalSpawner] Could not find a suitable goal position.");
+}
+
 }
