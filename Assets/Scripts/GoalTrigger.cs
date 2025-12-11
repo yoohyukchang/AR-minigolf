@@ -32,9 +32,7 @@ public class GoalTrigger : MonoBehaviour
         if (trigger.bounds.Intersects(ballCol.bounds))
         {
             Debug.Log("GOAL SCORED!");
-
-            // TODO: Notify GameManager here
-            // GameManager.Instance.OnGoalScored();
+            GameManager.Instance.OnGoal();
         }
 
         goalPending = false;
