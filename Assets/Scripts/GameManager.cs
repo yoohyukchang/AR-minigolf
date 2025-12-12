@@ -5,18 +5,22 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("UI")]
-    public GameObject goalScreen;
+    public GameObject goalUIRoot; // Assign GoalUICanvas here (NOT GoalScreen)
 
     [Header("Gameplay")]
     public GoalSpawner goalSpawner;
     public Transform ballTransform;
     private Vector3 ballStartPos;
 
+    public ObstacleSpawner obstacleSpawner;
+    public StartGameManager startGameManager;
+
     [System.Serializable]
     public struct LevelBallTuning
     {
         [Tooltip("Multiplier applied to club impulse force.")]
         public float shotImpulseMultiplier;
+
         [Tooltip("Maximum linear velocity for the ball (0 = no limit).")]
         public float maxBallSpeed;
     }
@@ -70,31 +74,59 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
-        ballStartPos = ballTransform.position;
-        goalScreen.SetActive(false);
+
+        if (ballTransform != null)
+            ballStartPos = ballTransform.position;
+
+        // Hide goal UI root at boot
+        if (goalUIRoot != null)
+            goalUIRoot.SetActive(false);
     }
 
     public void OnGoal()
     {
-        goalScreen.SetActive(true);
+        // Show goal UI root (not just a child panel)
+        if (goalUIRoot != null)
+            goalUIRoot.SetActive(true);
 
-        var rb = ballTransform.GetComponent<Rigidbody>();
+        // Freeze ball
+        var rb = ballTransform != null ? ballTransform.GetComponent<Rigidbody>() : null;
         if (rb) rb.isKinematic = true;
     }
 
     public void RestartGame()
     {
-        goalScreen.SetActive(false);
+        // Hide goal UI root so it stops blocking ray interactions
+        if (goalUIRoot != null)
+            goalUIRoot.SetActive(false);
 
-        var rb = ballTransform.GetComponent<Rigidbody>();
+        // Reset ball physics
+        var rb = ballTransform != null ? ballTransform.GetComponent<Rigidbody>() : null;
         if (rb)
         {
             rb.isKinematic = false;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
-        ballTransform.position = ballStartPos;
 
-        goalSpawner.ResetSpawner();
+        // Reset ball position
+        if (ballTransform != null)
+            ballTransform.position = ballStartPos;
+
+        // Force new goal spawn
+        if (goalSpawner != null)
+            goalSpawner.ResetSpawner();
+
+        // Reset obstacles
+        if (obstacleSpawner != null)
+            obstacleSpawner.ResetObstacles();
+
+        // Hide ball until StartGameManager triggers BeginGame again
+        if (ballTransform != null)
+            ballTransform.gameObject.SetActive(false);
+
+        // Show level selection again
+        if (startGameManager != null)
+            startGameManager.ShowStartUI();
     }
 }
