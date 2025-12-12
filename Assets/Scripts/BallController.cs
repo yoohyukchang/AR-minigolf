@@ -11,6 +11,70 @@ public class BallController : MonoBehaviour
     private bool _placed;
     private bool _startRequested;
 
+    // -----------------------------
+    // GRASS SLOWDOWN SYSTEM
+    // -----------------------------
+    [Header("Grass Slowdown Settings")]
+    public float dragInGrass = 1.0f;
+    public float angularDragInGrass = 1.0f;
+
+    private float _baseDrag;
+    private float _baseAngularDrag;
+    private int _grassCount = 0; // handles overlapping grass patches
+
+    // -----------------------------
+    // RESPAWN SYSTEM
+    // -----------------------------
+    private Vector3 _originalSpawnPos;
+    private bool _spawnPosSet = false;
+
+    public void RegisterOriginalSpawn()
+    {
+        _originalSpawnPos = ballTransform.position;
+        _spawnPosSet = true;
+    }
+
+    public void RespawnBall()
+    {
+        if (!_spawnPosSet || ballTransform == null) return;
+
+        Rigidbody rb = ballTransform.GetComponent<Rigidbody>();
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        ballTransform.position = _originalSpawnPos;
+        ballTransform.gameObject.SetActive(true);
+    }
+
+    // ---------- GRASS API ----------
+    public void EnterGrass()
+    {
+        _grassCount++;
+        ApplyDragState();
+    }
+
+    public void ExitGrass()
+    {
+        _grassCount = Mathf.Max(0, _grassCount - 1);
+        ApplyDragState();
+    }
+
+    private void ApplyDragState()
+    {
+        Rigidbody rb = ballTransform.GetComponent<Rigidbody>();
+
+        if (_grassCount > 0)
+        {
+            rb.linearDamping = dragInGrass;
+            rb.angularDamping = angularDragInGrass;
+        }
+        else
+        {
+            rb.linearDamping = _baseDrag;
+            rb.angularDamping = _baseAngularDrag;
+        }
+    }
+
     void Start()
     {
         if (!mruk)
@@ -23,6 +87,10 @@ public class BallController : MonoBehaviour
         {
             ballTransform.gameObject.SetActive(false);
         }
+
+        Rigidbody rb = ballTransform.GetComponent<Rigidbody>();
+        _baseDrag = rb.linearDamping;
+        _baseAngularDrag = rb.angularDamping;
     }
 
     // Called by the Start button (via StartGameManager)
@@ -89,7 +157,37 @@ public class BallController : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
-
+        RegisterOriginalSpawn();
         Debug.Log("MRUK: Ball placed above floor.");
     }
+
+    public void OnManholeHit()
+    {
+        if (!_spawnPosSet) return;
+
+        StopAllCoroutines();
+        StartCoroutine(ManholeRespawnRoutine());
+    }
+
+    private System.Collections.IEnumerator ManholeRespawnRoutine()
+    {
+        Rigidbody rb = ballTransform.GetComponent<Rigidbody>();
+
+        // Freeze physics immediately
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true;
+
+        // Hide ball
+        ballTransform.gameObject.SetActive(false);
+
+        yield return new WaitForSeconds(0.5f);
+
+        // Restore
+        ballTransform.position = _originalSpawnPos;
+        ballTransform.gameObject.SetActive(true);
+
+        rb.isKinematic = false;
+    }
+
 }

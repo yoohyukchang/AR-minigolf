@@ -1687,6 +1687,8 @@ MonoBehaviour:
   mruk: {fileID: 982599373}
   playerHead: {fileID: 1220487536}
   ballTransform: {fileID: 875096207}
+  dragInGrass: 1
+  angularDragInGrass: 1
 --- !u!1 &792190169
 GameObject:
   m_ObjectHideFlags: 0
@@ -3557,6 +3559,7 @@ GameObject:
   - component: {fileID: 2046239256}
   - component: {fileID: 2046239258}
   - component: {fileID: 2046239259}
+  - component: {fileID: 2046239260}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3579,6 +3582,7 @@ MonoBehaviour:
   startUIRoot: {fileID: 1764709139}
   ballController: {fileID: 791402764}
   goalSpawner: {fileID: 2046239258}
+  obstacleSpawner: {fileID: 2046239260}
 --- !u!4 &2046239257
 Transform:
   m_ObjectHideFlags: 0
@@ -3627,6 +3631,27 @@ MonoBehaviour:
   goalScreen: {fileID: 253769204}
   goalSpawner: {fileID: 2046239258}
   ballTransform: {fileID: 875096207}
+--- !u!114 &2046239260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2046239255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c2841042095746a4be893e12ea6c9cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObstacleSpawner
+  mruk: {fileID: 982599373}
+  playerHead: {fileID: 1220487536}
+  grassPrefab: {fileID: 7586792128110001949, guid: 0f37d2af279df48739a53965853a2250, type: 3}
+  manholePrefab: {fileID: 8336569745043198223, guid: e2c0609d23e9e42c1bda1505c80a9309, type: 3}
+  grassCount: 1
+  manholeCount: 5
+  minDistanceFromPlayer: 0.5
+  maxDistanceFromPlayer: 2.5
+  maxTriesPerObstacle: 40
 --- !u!1 &2059320849
 GameObject:
   m_ObjectHideFlags: 0

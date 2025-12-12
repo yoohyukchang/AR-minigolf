@@ -9,6 +9,7 @@ public class StartGameManager : MonoBehaviour
     public BallController ballController;
     public GoalSpawner goalSpawner;
     private bool hasStarted = false;
+    public ObstacleSpawner obstacleSpawner;
 
     // Called by the Start button
     public void OnStartButtonPressed()
@@ -31,6 +32,10 @@ public class StartGameManager : MonoBehaviour
         if (goalSpawner != null)
         {
             goalSpawner.BeginGame();
+        }
+
+        if (obstacleSpawner != null) {
+            obstacleSpawner.BeginGame();
         }
 
 
