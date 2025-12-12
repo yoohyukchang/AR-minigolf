@@ -70,6 +70,9 @@ public class GolfClubHitBall : MonoBehaviour
             clubStats.baseImpulse + effectiveSpeed * clubStats.swingSpeedMultiplier;
         impulseMagnitude = Mathf.Min(impulseMagnitude, clubStats.maxImpulse);
 
+        float levelMul = (GameManager.Instance != null) ? GameManager.Instance.shotImpulseMultiplier : 1f;
+        impulseMagnitude *= levelMul;
+
         // 5. Apply impulse
         ballRb.AddForce(launchDir * impulseMagnitude, ForceMode.Impulse);
     }
