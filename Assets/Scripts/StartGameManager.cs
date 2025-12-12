@@ -8,37 +8,58 @@ public class StartGameManager : MonoBehaviour
     [Header("Gameplay")]
     public BallController ballController;
     public GoalSpawner goalSpawner;
-    private bool hasStarted = false;
     public ObstacleSpawner obstacleSpawner;
 
-    // Called by the Start button
-    public void OnStartButtonPressed()
+    private bool hasStarted = false;
+
+    [Header("Level Selection (1-3)")]
+    [SerializeField] private int selectedLevel = 1;
+
+
+    // Wire your Level1/2/3 buttons to this with parameter 1/2/3
+    public void StartLevel(int level)
     {
         if (hasStarted) return;
         hasStarted = true;
 
+        selectedLevel = Mathf.Clamp(level, 1, 3);
+
         // Hide the start menu UI
         if (startUIRoot != null)
-        {
             startUIRoot.SetActive(false);
+
+        // Configure obstacle counts by level BEFORE spawning
+        if (obstacleSpawner != null)
+        {
+            switch (selectedLevel)
+            {
+                case 1:
+                    obstacleSpawner.grassCount = 0;
+                    obstacleSpawner.manholeCount = 0;
+                    break;
+
+                case 2:
+                    obstacleSpawner.grassCount = 1;
+                    obstacleSpawner.manholeCount = 1;
+                    break;
+
+                case 3:
+                    obstacleSpawner.grassCount = 3;
+                    obstacleSpawner.manholeCount = 3;
+                    break;
+            }
         }
 
-        // Tell ballController to spawn & drop the ball when MRUK is ready
+        // Start game flow
         if (ballController != null)
-        {
             ballController.BeginGame();
-        }
 
         if (goalSpawner != null)
-        {
             goalSpawner.BeginGame();
-        }
 
-        if (obstacleSpawner != null) {
+        if (obstacleSpawner != null)
             obstacleSpawner.BeginGame();
-        }
 
-
-        Debug.Log("[StartGameManager] Game started!");
+        Debug.Log($"[StartGameManager] Game started! Level={selectedLevel}");
     }
 }
