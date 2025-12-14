@@ -73,15 +73,8 @@ public class StartGameManager : MonoBehaviour
         // Begin gameplay
         if (ballController != null)
         {
-            switch (selectedLevel)
-            {
-                case 2:
-                    ballController.ballTransform.GetComponent<Renderer>().material.color = Color.yellow; // changed color
-                    break;
-                case 3:
-                    ballController.ballTransform.GetComponent<Renderer>().material.color = Color.red;
-                    break;
-            }
+            ballController.SetBallColorByLevel(selectedLevel);
+            ballController.SetBouncinessForLevel(selectedLevel);
             ballController.BeginGame();
         }
         if (goalSpawner != null) goalSpawner.BeginGame();

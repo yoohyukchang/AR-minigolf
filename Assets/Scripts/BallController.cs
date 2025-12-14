@@ -28,6 +28,38 @@ public class BallController : MonoBehaviour
     private Vector3 _originalSpawnPos;
     private bool _spawnPosSet = false;
 
+
+    [Header("Bounciness Settings")]
+    public float baseBounciness = 0.5f;
+    public float bouncinessPerLevel = 0.1f;
+
+    private PhysicsMaterial ballPhysicsMaterial;
+
+    public void SetBouncinessForLevel(int level)
+    {
+        if (ballPhysicsMaterial == null) return;
+
+        ballPhysicsMaterial.bounciness = Mathf.Clamp01(baseBounciness + (level - 1) * bouncinessPerLevel);
+        ballPhysicsMaterial.bounceCombine = PhysicsMaterialCombine.Maximum;
+    }
+
+    public void SetBallColorByLevel(int level)
+    {
+        if (ballTransform == null) return;
+        switch(level)
+        {
+            case 1:
+                ballTransform.GetComponent<Renderer>().material.color = Color.white;
+                break;
+            case 2:
+                ballTransform.GetComponent<Renderer>().material.color = Color.yellow;
+                break;
+            case 3:
+                ballTransform.GetComponent<Renderer>().material.color = Color.red;
+                break;
+        }
+    }
+
     public void RegisterOriginalSpawn()
     {
         _originalSpawnPos = ballTransform.position;
@@ -91,6 +123,10 @@ public class BallController : MonoBehaviour
         Rigidbody rb = ballTransform.GetComponent<Rigidbody>();
         _baseDrag = rb.linearDamping;
         _baseAngularDrag = rb.angularDamping;
+
+        Collider ballCollider = ballTransform.GetComponent<Collider>();
+        ballPhysicsMaterial = new PhysicsMaterial();
+        ballCollider.material = ballPhysicsMaterial;
     }
 
     // Called by the Start button (via StartGameManager)
@@ -103,6 +139,10 @@ public class BallController : MonoBehaviour
         {
             // Show the ball so physics can act on it
             ballTransform.gameObject.SetActive(true);
+        }
+        if (StrokeCounter.Instance != null)
+        {
+            StrokeCounter.Instance.ResetStrokes();
         }
     }
 
@@ -189,5 +229,4 @@ public class BallController : MonoBehaviour
 
         rb.isKinematic = false;
     }
-
 }
