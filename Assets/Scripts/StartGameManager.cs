@@ -55,14 +55,35 @@ public class StartGameManager : MonoBehaviour
         {
             switch (selectedLevel)
             {
-                case 1: obstacleSpawner.grassCount = 0; obstacleSpawner.manholeCount = 0; break;
-                case 2: obstacleSpawner.grassCount = 1; obstacleSpawner.manholeCount = 1; break;
-                case 3: obstacleSpawner.grassCount = 3; obstacleSpawner.manholeCount = 3; break;
+                case 1:
+                    obstacleSpawner.grassCount = 0;
+                    obstacleSpawner.manholeCount = 0;
+                    break;
+                case 2:
+                    obstacleSpawner.grassCount = 1;
+                    obstacleSpawner.manholeCount = 1;
+                    break;
+                case 3:
+                    obstacleSpawner.grassCount = 3;
+                    obstacleSpawner.manholeCount = 3;
+                    break;
             }
         }
 
         // Begin gameplay
-        if (ballController != null) ballController.BeginGame();
+        if (ballController != null)
+        {
+            switch (selectedLevel)
+            {
+                case 2:
+                    ballController.ballTransform.GetComponent<Renderer>().material.color = Color.yellow; // changed color
+                    break;
+                case 3:
+                    ballController.ballTransform.GetComponent<Renderer>().material.color = Color.red;
+                    break;
+            }
+            ballController.BeginGame();
+        }
         if (goalSpawner != null) goalSpawner.BeginGame();
         if (obstacleSpawner != null) obstacleSpawner.BeginGame();
 

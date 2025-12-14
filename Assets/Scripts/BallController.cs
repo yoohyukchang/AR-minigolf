@@ -127,8 +127,8 @@ public class BallController : MonoBehaviour
             Debug.LogWarning("MRUK: No room found.");
             return;
         }
-
-        var floor = room.GetFloorAnchor();
+        
+        var floor = room.FloorAnchor;
         if (floor == null)
         {
             Debug.LogWarning("MRUK: No floor anchor found.");
